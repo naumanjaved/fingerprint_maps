@@ -61,7 +61,7 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
                     if entry == 'AFR_AF':
                         values.append(float(value))
                     if entry == 'AMR_AF':
-            					values.append(float(value))
+                                values.append(float(value))
                     if entry == 'EUR_AF':
                         values.append(float(value))
                     if entry == 'EAS_AF':
@@ -80,7 +80,7 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
                     if not diffbool:
                         continue
                 if len(values) != 5:
-        				continue
+                        continue
                 if SNP in SNPs or SNP == ".":
                     continue
                 # append to list of "similar" SNPs
@@ -111,7 +111,7 @@ def create_VCFs(chrom, VCF_file, int_directory, min_MAF):
     -------
     None
     '''
-	subprocess.check_call("vcftools --vcf " + VCF_file \
+    subprocess.check_call("vcftools --vcf " + VCF_file \
     + "--maf " + min_MAF + " " \
     + "--phased " \
     + "--remove-indels " \
@@ -140,28 +140,28 @@ def sort_VCF(chrom, int_directory):
     -------
     None
     '''
-	# sort
-	subprocess.call("tail -n+253 " + int_directory + chrom + ".recode.vcf" \
+    # sort
+    subprocess.call("tail -n+253 " + int_directory + chrom + ".recode.vcf" \
                             + " | awk -F'\t' '{print $3}' | sort | uniq -d > " \
                             + int_directory + chrom + ".duplicate", shell=True)
-	# new file to write duplicate IDs to
-	duplicates = open(int_directory + chrom + ".duplicate", 'r')
-	snplist = []
-	# determine and write duplicate IDs
-	with duplicates as d:
-		for snp in d:
-			snplist.append(snp.rstrip('\n'))
-	vcf = open(int_directory + chrom + ".recode.vcf", 'r')
-	newvcf = open(int_directory + chrom + ".recode_u.vcf", 'w')
-	# rewrite unique IDs to new file
-	with vcf as f:
-		for k, line in enumerate(f):
-			if k <= 252:
-				newvcf.write(line)
-			if k > 252:
-				if line.split('\t')[2] not in snplist:
-					newvcf.write(line)
-	newvcf.close()
+    # new file to write duplicate IDs to
+    duplicates = open(int_directory + chrom + ".duplicate", 'r')
+    snplist = []
+    # determine and write duplicate IDs
+    with duplicates as d:
+    	for snp in d:
+            snplist.append(snp.rstrip('\n'))
+    vcf = open(int_directory + chrom + ".recode.vcf", 'r')
+    newvcf = open(int_directory + chrom + ".recode_u.vcf", 'w')
+    # rewrite unique IDs to new file
+    with vcf as f:
+        for k, line in enumerate(f):
+            if k <= 252:
+                newvcf.write(line)
+            if k > 252:
+                if line.split('\t')[2] not in snplist:
+                    newvcf.write(line)
+    newvcf.close()
 
 def create_PLINK_binary(chrom, int_directory, recomb_file):
     '''
@@ -182,16 +182,16 @@ def create_PLINK_binary(chrom, int_directory, recomb_file):
     -------
     None
     '''
-	# if autosome, use 1000 G recombination map to write centimorgan
+    # if autosome, use 1000 G recombination map to write centimorgan
     # positions for the .bim file
-	if i != "X":
+    if i != "X":
         subprocess.check_call("plink --vcf " \
         + int_directory + chrom + ".recode_u.vcf" \
         + " --cm-map " + recomb_file + " " + chrom \
         + " --make-bed " \
         + " --out " + int_directory + chrom, shell=False)
-	# if x chromsome then just use basepair position instead of centimorgans
-	else:
+    # if x chromsome then just use basepair position instead of centimorgans
+    else:
         subprocess.check_call("plink --vcf " + VCF_filter \
         + " --make-bed " \
         + " --out " + int_directory + chrom, shell=False)
@@ -220,22 +220,22 @@ def LD_score(chrom, binary_file, int_directory, LD_script, window_cm, window_kb)
     -------
     None
     '''
-    	if chrom != "X":
-    		subprocess.check_call("python " + LD_script \
-            + " --bfile " + intermediate_directory + chrom \
-            + " --ld-wind-cm " + str(window_cm) \
-            + " --out " + int_directory + "LD-" + chrom \
-            + " --l2 --yes-really", shell=False)
+    if chrom != "X":
+        subprocess.check_call("python " + LD_script \
+        + " --bfile " + intermediate_directory + chrom \
+        + " --ld-wind-cm " + str(window_cm) \
+        + " --out " + int_directory + "LD-" + chrom \
+        + " --l2 --yes-really", shell=False)
 
-    	# X chromosome doesn't have a recombination map from 1000 genomes
-    	# so just set LD score to be calculate within an approximate
-    	# centimorgan window
-    	else:
-    		subprocess.check_call("python " + LD_path + "ldsc.py " \
-            + "--bfile " + binary_file \
-            + " --ld-wind-kb " + str(window_kb) \
-            + " --out " + int_directory + "LD-" + chrom \
-            + " --l2 --yes-really", shell=False)
+    # X chromosome doesn't have a recombination map from 1000 genomes
+    # so just set LD score to be calculate within an approximate
+    # centimorgan window
+    else:
+        subprocess.check_call("python " + LD_path + "ldsc.py " \
+        + "--bfile " + binary_file \
+        + " --ld-wind-kb " + str(window_kb) \
+        + " --out " + int_directory + "LD-" + chrom \
+        + " --l2 --yes-really", shell=False)
 
 def order_scores(chrom, LD_file, int_directory):
     '''
@@ -254,36 +254,36 @@ def order_scores(chrom, LD_file, int_directory):
     -------
     None
     '''
-	# unzip files calculated by LDScore regression
-	subprocess.check_call("gzip -d " + LD_file + ".gz",shell=False)
-	assoc = open(LD_file, 'r')
-	# create a new .p file to write results to"
-	p_file = open(int_directory + name + ".p", 'w')
-	# write header
-	p_file.write("SNP" + "\t" + 'P\n')
-	p_dictionary = {}
-	size_dict = {}
+    # unzip files calculated by LDScore regression
+    subprocess.check_call("gzip -d " + LD_file + ".gz",shell=False)
+    assoc = open(LD_file, 'r')
+    # create a new .p file to write results to"
+    p_file = open(int_directory + name + ".p", 'w')
+    # write header
+    p_file.write("SNP" + "\t" + 'P\n')
+    p_dictionary = {}
+    size_dict = {}
 
-	# loop over the association file and for each SNP assign its LDscore
-	# in a dictionary
-	for line in assoc.readlines()[1:]:
-		SNP = line.split('\t')[1]
+    # loop over the association file and for each SNP assign its LDscore
+    # in a dictionary
+    for line in assoc.readlines()[1:]:
+        SNP = line.split('\t')[1]
 
-		LD = float(line.split('\t')[3].rstrip('\n'))
+        LD = float(line.split('\t')[3].rstrip('\n'))
 
-		p_dictionary[SNP] = LD
-	assoc.close()
-	# calculate the max LDscore for the chromosome
-	max_LD = float(max(p_dictionary.values()))
-	# for each SNP in the sorted dictionary, map the LDscore
-	# to LD_score_new_i = (1.0 - LD_score_i / max(LD_score))
-	# Add 1 x 10^-14 so that no SNP has a p value of 0.0
-	for SNP in sorted(p_dictionary, key=p_dictionary.get, reverse=True):
-		p_val = (1.0 - (float(p_dictionary[SNP])/max_LD)) + 0.00000000000001
-		if p_val < 1.0:
-			p_file.write(SNP + '\t' + str(p_val) + '\n')
-	del p_dictionary
-	p_file.close()
+        p_dictionary[SNP] = LD
+    assoc.close()
+    # calculate the max LDscore for the chromosome
+    max_LD = float(max(p_dictionary.values()))
+    # for each SNP in the sorted dictionary, map the LDscore
+    # to LD_score_new_i = (1.0 - LD_score_i / max(LD_score))
+    # Add 1 x 10^-14 so that no SNP has a p value of 0.0
+    for SNP in sorted(p_dictionary, key=p_dictionary.get, reverse=True):
+        p_val = (1.0 - (float(p_dictionary[SNP])/max_LD)) + 0.00000000000001
+        if p_val < 1.0:
+            p_file.write(SNP + '\t' + str(p_val) + '\n')
+    del p_dictionary
+    p_file.close()
 
 
 def prune(chrom, int_directory, window, slide, cutoff):
@@ -312,14 +312,14 @@ def prune(chrom, int_directory, window, slide, cutoff):
     None
     '''
 
-	if chrom != "X":
-		subprocess.check_call("plink --bfile " + int_directory  + chrom \
+    if chrom != "X":
+        subprocess.check_call("plink --bfile " + int_directory  + chrom \
         + " --indep-pairwise " + window + " " + slide + " " + cutoff \
         + " --r" \
         + " --out " + int_directory + chrom, shell=False)
 
-	else:
-		subprocess.check_call("plink --bfile " + int_directory  + chrom \
+    else:
+        subprocess.check_call("plink --bfile " + int_directory  + chrom \
         + " --indep-pairwise " + window + " " + slide + " " + cutoff \
         + " --r" \
         + " --ld-xchr 1" \
@@ -349,17 +349,17 @@ def LD_separate(chrom, int_directory):
     out_SNPs = []
     index_SNPs = []
     with prune_file as prune:
-    	for k, line in enumerate(prune):
-    		index_SNPs.append(line.rstrip('\n'))
+        for k, line in enumerate(prune):
+            index_SNPs.append(line.rstrip('\n'))
 
     with LD_file as LD:
-    	for k, line in enumerate(LD):
-    		if k > 0:
-    			SNP = line.rstrip('\n').split('\t')[0]
-    			if SNP in index_SNPs:
-    				in_file.write(line)
-    			else:
-    				out_file.write(line)
+        for k, line in enumerate(LD):
+            if k > 0:
+                SNP = line.rstrip('\n').split('\t')[0]
+                if SNP in index_SNPs:
+                    in_file.write(line)
+                else:
+                    out_file.write(line)
 
     in_file.close()
     out_file.close()
@@ -387,7 +387,7 @@ def clump(chrom, int_directory, cutoff, max_size):
     -------
     None
     '''
-	subprocess.check_call("plink --bfile " + int_directory + chrom \
+    subprocess.check_call("plink --bfile " + int_directory + chrom \
                 + " --clump " + int_directory + chrom + "_in.p " \
                 + int_directory + chrom + "_out.p " \
                 + "--clump-index-first " \
@@ -430,14 +430,14 @@ def reformat_clumps(chrom, int_directory):
     anchor_file = open(chrom + "_sorted.clumped", 'r')
     anchors = []
     for line in anchor_file.readlines()[2:]:
-    	anchor = line.rstrip('\n').split()[2]
-    	anchors.append(anchor)
-    	block_dict[anchor] = ""
-    	snps = line.rstrip('\n').split()[11].split(',')
-    	for snp in snps:
-    		if snp.rstrip('(w)') not in anchors:
-    			variant = snp.split('(')[0]
-    			block_dict[variant] = anchor
+        anchor = line.rstrip('\n').split()[2]
+        anchors.append(anchor)
+        block_dict[anchor] = ""
+        snps = line.rstrip('\n').split()[11].split(',')
+        for snp in snps:
+            if snp.rstrip('(w)') not in anchors:
+                variant = snp.split('(')[0]
+                block_dict[variant] = anchor
     anchor_file.close()
 
     # read in old map
@@ -450,21 +450,21 @@ def reformat_clumps(chrom, int_directory):
     # defined above. If the variant IS an index variant
     # then simply write its index variant as ''
     for line in old_map.readlines()[253:]:
-    	parsed = line.split('\t')
-    	for item in parsed[7].split(";"):
-    		entryname = item.split('=')[0]
-    		if entryname == "AF":
-    			AF = item.split('=')[1]
-    	tab = '\t'
-    	if parsed[2] in block_dict.keys():
-    		# order of fields is:
-    		# chr, pos, name, maj, min,
-    		# MAF, anchor
-    		newline = tab.join(parsed[:5]) + '\t' + \
-    					AF + '\t' + \
-    					block_dict[parsed[2]] + '\t' + \
-    					"" + '\t' + '\n'
-    		new_map.write(newline)
+        parsed = line.split('\t')
+        for item in parsed[7].split(";"):
+            entryname = item.split('=')[0]
+            if entryname == "AF":
+                AF = item.split('=')[1]
+        tab = '\t'
+        if parsed[2] in block_dict.keys():
+            # order of fields is:
+            # chr, pos, name, maj, min,
+            # MAF, anchor
+            newline = tab.join(parsed[:5]) + '\t' + \
+                        AF + '\t' + \
+                        block_dict[parsed[2]] + '\t' + \
+                        "" + '\t' + '\n'
+            new_map.write(newline)
     new_map.close()
     old_map.close()
 
@@ -496,10 +496,10 @@ def detect_negative_LD(chrom, clump_file, int_directory):
     # in tuple format and the value is the r^2 correlation
     r_dict = {}
     with r_file as r:
-    	for k, line in enumerate(r):
-    		if k > 0:
-    			r_dict[(line.split()[2], line.split()[5])] = \
-    			line.split()[6].rstrip('\n')
+        for k, line in enumerate(r):
+            if k > 0:
+                r_dict[(line.split()[2], line.split()[5])] = \
+                line.split()[6].rstrip('\n')
     # loop over the newly created map file and for each
     # pair of SNP/anchor SNP, determine whether the
     # the pair's r^2 correlation is negative by checking
@@ -508,23 +508,23 @@ def detect_negative_LD(chrom, clump_file, int_directory):
 
     map_file = open(inter_directory + chrom + ".map", 'r')
     with map_file as maps:
-    	for num, line in enumerate(maps):
-    #		if num > (end - 1) :
-    		if len(line.split('\t')) > 6:
-    			snp1 = line.split('\t')[2]
-    			snp2 = line.split('\t')[6]
-    			if (snp1, snp2) in r_dict.keys():
-    				if float(r_dict[(snp1, snp2)]) < -0.50:
-    					with open(direc+filename + ".negLD", 'a') as negLDfile:
-    						negLDfile.write(snp1 + '\t' + snp2 + '\t' \
+        for num, line in enumerate(maps):
+    #       if num > (end - 1) :
+            if len(line.split('\t')) > 6:
+                snp1 = line.split('\t')[2]
+                snp2 = line.split('\t')[6]
+                if (snp1, snp2) in r_dict.keys():
+                    if float(r_dict[(snp1, snp2)]) < -0.50:
+                        with open(direc+filename + ".negLD", 'a') as negLDfile:
+                            negLDfile.write(snp1 + '\t' + snp2 + '\t' \
                                             + r_dict[(snp1, snp2)] + '\n')
-    				del r_dict[(snp1, snp2)]
-    			if (snp2, snp1) in r_dict.keys():
-    				if float(r_dict[(snp2, snp1)]) < -0.50:
-    					with open(direc+filename +".negLD", 'a') as negLDfile:
-    						negLDfile.write(snp1 + '\t' + snp2 + '\t' \
+                    del r_dict[(snp1, snp2)]
+                if (snp2, snp1) in r_dict.keys():
+                    if float(r_dict[(snp2, snp1)]) < -0.50:
+                        with open(direc+filename +".negLD", 'a') as negLDfile:
+                            negLDfile.write(snp1 + '\t' + snp2 + '\t' \
                                             + r_dict[(snp2, snp1)] + '\n')
-    				del r_dict[(snp2, snp1)]
+                    del r_dict[(snp2, snp1)]
 
 def switch_alleles(chrom, cwd, neg_file):
     '''
@@ -549,27 +549,27 @@ def switch_alleles(chrom, cwd, neg_file):
     '''
 
     tab = '\t'
-	negfile = open(inter_directory + chrom + ".neg", 'r')
-	neglist = []
-	with negfile as neg:
-		for line in neg:
-			neglist.append(line.split()[0])
-	newmapfile =open(cwd + chrom + "filtered.map", 'w')
-	anchor_maf_problems = []
-	oldmapfile = open(inter_directory + chrom + ".map", 'r')
-	with oldmapfile as old:
-		for k, line in enumerate(old):
-			chrom =line.split('\t')[0]
-			bp = line.split('\t')[1]
-			maf = float(line.split('\t')[5])
-			snp = line.split('\t')[2]
-			minor = line.split('\t')[4]
-			maj = line.split('\t')[3]
-			anch = line.split('\t')[6]
-			# switch alleles if found in the list of SNPs in negative LD
-			if snp in neglist:
-				newline = [chrom, bp, snp, minor, maj, str(maf), anch, "", "\n"]
-				newmapfile.write(tab.join(newline))
-			else:
-				newmapfile.write(line)
-	newmapfile.close()
+    negfile = open(inter_directory + chrom + ".neg", 'r')
+    neglist = []
+    with negfile as neg:
+        for line in neg:
+            neglist.append(line.split()[0])
+    newmapfile =open(cwd + chrom + "filtered.map", 'w')
+    anchor_maf_problems = []
+    oldmapfile = open(inter_directory + chrom + ".map", 'r')
+    with oldmapfile as old:
+        for k, line in enumerate(old):
+            chrom =line.split('\t')[0]
+            bp = line.split('\t')[1]
+            maf = float(line.split('\t')[5])
+            snp = line.split('\t')[2]
+            minor = line.split('\t')[4]
+            maj = line.split('\t')[3]
+            anch = line.split('\t')[6]
+            # switch alleles if found in the list of SNPs in negative LD
+            if snp in neglist:
+                newline = [chrom, bp, snp, minor, maj, str(maf), anch, "", "\n"]
+                newmapfile.write(tab.join(newline))
+            else:
+                newmapfile.write(line)
+    newmapfile.close()
