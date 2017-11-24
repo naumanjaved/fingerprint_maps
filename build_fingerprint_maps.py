@@ -13,12 +13,13 @@ import sys
 import argparse
 import traceback
 import time
+import datetime
 
 __version__ = '1.0.0'
-MASTHEAD = "*********************************************************************\n"
+MASTHEAD = "----------------------------------------------------------------------\n"
 MASTHEAD += "* Fingerprint_Maps\n"
 MASTHEAD += "* Version {V}\n".format(V=__version__)
-MASTHEAD += "*********************************************************************\n"
+MASTHEAD += "---------------------------------------------------------------------\n"
 
 class Logger(object):
     '''
@@ -35,40 +36,52 @@ class Logger(object):
         print >>self.log_fh, msg
         print msg
 
-def create_map(args, log):
+def create_maps(args, log):
 
     full_path = os.getcwd() + "/"
     intermediate_directory = full_path + "intermediates/"
-#    recomb_file = "1000GP_Phase3/genetic_map_chr" + chrom + "_combined_b37.txt*"
-
-    build.extract_similar_SNPs(args.chromosome, VCF_file,
+    #print intermediate_directory
+    log.log('Creating list of SNPs with similar MAFs across populations...')
+    build.extract_similar_SNPs(args.chromosome, args.VCF_file,
                                 intermediate_directory, args.similarity)
-
-    build.create_VCFs(args.chromosome, args.VCF_file,
-                        intermediate_directory, args.min_MAF)
-
+    log.log('Finished creating lists of similar SNPs...')
+    log.log('Creating filtered VCFs.')
+    build.create_VCFs(args.chromosome, args.VCF_file, intermediate_directory, args.min_MAF)
+    log.log('Finished creating filtered VCFs.')
+    log.log('Sorting VCFs...')
     build.sort_VCF(args.chromosome, intermediate_directory)
-
+    log.log('Finished sorting VCFs.')
+    log.log('Creating PLINK binary files...')
     build.create_PLINK_binary(args.chromosome, intermediate_directory,
                               args.recomb_directory)
-
+    log.log('Finished creating binary files.')
+    log.log('Calculating LDScores...')
     build.LD_score(args.chromosome, intermediate_directory, args.LD_script,
                     args.LDScore_window_autosome, args.LDScore_window_X)
-
+    log.log('Finished calculating LDScores.')
+    log.log('Creating PLINK association files...')
+    build.order(args.chromosome, intermediate_directory)
+    log.log('Finished creating PLINK association files.')
+    log.log('Pruning SNPs...')
     build.prune(args.chromosome, intermediate_directory,
                 args.prune_window, args.prune_slide, args.prune_cutoff)
-
-    build.LD_separate(chrom, intermediate_directory)
-
+    log.log('Finished pruning SNPs.')
+    log.log('Separating out LDScores into dependent and independent SNP files...')
+    build.LD_separate(args.chromosome, intermediate_directory)
+    log.log('Finished separating LDScores.')
+    log.log('Clumping SNPs...')
     build.clump(args.chromosome, intermediate_directory,
-                args.clump_cutoff, args.max_distance_clump)
-
+               args.clump_cutoff, args.max_distance_clump)
+    log.log('Finished clumping SNPs.')
+    log.log('Building map file...')
     build.reformat_clumps(args.chromosome, intermediate_directory)
-
+    log.log('Finished building map files.')
+    log.log('Detecting negative LD...')
     build.detect_negative_LD(args.chromosome, intermediate_directory)
-
+    log.log('Finished recording negative LD.')
+    log.log('Switching alleles...')
     build.switch_alleles(args.chromosome, full_path, intermediate_directory)
-
+    log.log('Finished switching negative LD alleles.')
 parser = argparse.ArgumentParser()
 # Directory specifications'
 parser.add_argument('--recomb_directory', default=None, type=str,
@@ -83,7 +96,7 @@ parser.add_argument('--LD_script', default=None, type=str,
 # SNP filtering and map calculation parameters
 parser.add_argument('--similarity', default=0.10, type=float,
     help='Maximum difference in population specific MAF allowed')
-parser.add_argument('--min_MAF', default=0.05, type=float,
+parser.add_argument('--min_MAF', default=0.10, type=float,
     help='Minimum minor allele fraction of SNPs that will be included in map')
 parser.add_argument('--LDScore_window_autosome', default=1.0, type=float,
     help='Window size(in centimorgans) over which to calculate LDScore.')
@@ -107,7 +120,7 @@ if __name__ == "__main__":
                             '17', '18', '19', '20', '21', '22', 'X']
 
     if not isinstance(args.recomb_directory, str):
-    	raise TypeError('--recomb_directory must be string pointing to where recomb files are stored')
+        raise TypeError('--recomb_directory must be string pointing to where recomb files are stored')
     if args.recomb_directory is None:
         raise ValueError('--recomb_directory is required.')
 
@@ -125,7 +138,7 @@ if __name__ == "__main__":
         raise TypeError('--LD_script must be full path pointing to ldsc.py')
     if args.LD_script is None:
         raise ValueError('--LD_script is required.')
-
+    '''
     if not isinstance(args.similarity, float):
         raise TypeError('--similarity must be a float between 0.0 and 1.0')
     if args.similarity is None or args.similarity < 0.0 or args.similarity > 1.0:
@@ -170,17 +183,16 @@ if __name__ == "__main__":
         raise TypeError('--max_distance_clump must be an int > 0')
     if args.max_distance_clump is None or args.max_distance_clump <=0:
         raise ValueError('--max_distance_clump is required - must be int > 0')
+    '''
 
-
-    log = Logger(args.chromsome+'.log')
+    log = Logger(args.chromosome+'.log')
 
     try:
         defaults = vars(parser.parse_args(''))
         opts = vars(args)
         non_defaults = [x for x in opts.keys() if opts[x] != defaults[x]]
         header = MASTHEAD
-        header += "Call: \n"
-        header += './build_fingerprint_maps.py \\\n'
+        header += 'build_fingerprint_maps.py \\\n'
         options = ['--'+x.replace('_','-')+' '+str(opts[x])+' \\' for x in non_defaults]
         header += '\n'.join(options).replace('True','').replace('False','')
         header = header[0:-1]+'\n'
@@ -196,4 +208,5 @@ if __name__ == "__main__":
     finally:
         log.log('Analysis finished at {T}'.format(T=time.ctime()) )
         time_elapsed = round(time.time()-start_time,2)
-        log.log('Total time elapsed: {T}'.format(T=sec_to_str(time_elapsed)))
+        log.log('Total time elapsed: {T}'.format(T=\
+	str(datetime.timedelta(seconds=time_elapsed))))

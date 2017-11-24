@@ -25,6 +25,7 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
     SIM : float
         similarity value - the maximum pairwise difference in population
         specific MAF above which a SNP is rejected
+
     Returns
     -------
     None
@@ -61,7 +62,7 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
                     if entry == 'AFR_AF':
                         values.append(float(value))
                     if entry == 'AMR_AF':
-                                values.append(float(value))
+                        values.append(float(value))
                     if entry == 'EUR_AF':
                         values.append(float(value))
                     if entry == 'EAS_AF':
@@ -111,14 +112,14 @@ def create_VCFs(chrom, VCF_file, int_directory, min_MAF):
     -------
     None
     '''
-    subprocess.check_call("vcftools --vcf " + VCF_file \
-    + "--maf " + min_MAF + " " \
+    subprocess.check_call("vcftools --vcf " + VCF_file + " " \
+    + "--maf " + str(min_MAF) + " " \
     + "--phased " \
     + "--remove-indels " \
     + "--min-alleles 2 --max-alleles 2 " \
     + "--recode --recode-INFO-all " \
     + "--snps " + int_directory + "chr_" + chrom + "-common-SNPs.list " \
-    + "--out " + int_directory + "chr_" + chrom, shell=False)
+    + "--out " + int_directory + "chr_" + chrom, shell=True)
 
 
 def sort_VCF(chrom, int_directory):
@@ -136,12 +137,13 @@ def sort_VCF(chrom, int_directory):
         directory path where intermediate and output files are stored
     min_MAF : float
         filter out all SNPs with population averaged MAF less than this value
+
     Returns
     -------
     None
     '''
     # sort
-    subprocess.call("tail -n+253 " + int_directory + chrom + ".recode.vcf" \
+    subprocess.check_call("tail -n+253 " + int_directory + "chr_" + chrom + ".recode.vcf" \
                             + " | awk -F'\t' '{print $3}' | sort | uniq -d > " \
                             + int_directory + chrom + ".duplicate", shell=True)
     # new file to write duplicate IDs to
@@ -149,9 +151,9 @@ def sort_VCF(chrom, int_directory):
     snplist = []
     # determine and write duplicate IDs
     with duplicates as d:
-    	for snp in d:
+        for snp in d:
             snplist.append(snp.rstrip('\n'))
-    vcf = open(int_directory + chrom + ".recode.vcf", 'r')
+    vcf = open(int_directory + "chr_" + chrom + ".recode.vcf", 'r')
     newvcf = open(int_directory + chrom + ".recode_u.vcf", 'w')
     # rewrite unique IDs to new file
     with vcf as f:
@@ -163,7 +165,7 @@ def sort_VCF(chrom, int_directory):
                     newvcf.write(line)
     newvcf.close()
 
-def create_PLINK_binary(chrom, int_directory, recomb_file):
+def create_PLINK_binary(chrom, int_directory, recomb_directory):
     '''
     Crates PLINK binary files(https://www.cog-genomics.org/plink2/formats) from
     input VCF for use with LDSC script(https://github.com/bulik/ldsc)
@@ -178,30 +180,36 @@ def create_PLINK_binary(chrom, int_directory, recomb_file):
         directory path where intermediate and output files are stored
     recomb_directory : string
         directory path where 1000genomes recombination map files are stored
+
     Returns
     -------
     None
     '''
+    recomb_file = recomb_directory \
+                    + "genetic_map_chr" \
+            + chrom \
+            + "_combined_b37.txt* " \
+            + chrom
     # if autosome, use 1000 G recombination map to write centimorgan
     # positions for the .bim file
-    if i != "X":
+    if chrom != "X":
         subprocess.check_call("plink --vcf " \
         + int_directory + chrom + ".recode_u.vcf" \
-        + " --cm-map " + recomb_file + " " + chrom \
-        + " --make-bed " \
-        + " --out " + int_directory + chrom, shell=False)
+        + " --cm-map " + recomb_file \
+    + " --make-bed" \
+        + " --out " + int_directory + chrom, shell=True)
     # if x chromsome then just use basepair position instead of centimorgans
     else:
-        subprocess.check_call("plink --vcf " + VCF_filter \
-        + " --make-bed " \
-        + " --out " + int_directory + chrom, shell=False)
+        subprocess.check_call("plink --vcf " \
+    + int_directory + chrom + ".recode_u.vcf" \
+    + " --make-bed " \
+        + " --out " + int_directory + chrom, shell=True)
 
-
-
-def LD_score(chrom, binary_file, int_directory, LD_script, window_cm, window_kb):
+def LD_score(chrom, int_directory, LD_script, window_cm, window_kb):
     '''
     Calculates LDscore of all variants for each chromosome
     using LDSC script(https://github.com/bulik/ldsc)
+
     Parameters
     ----------
     chrom : string
@@ -216,75 +224,27 @@ def LD_score(chrom, binary_file, int_directory, LD_script, window_cm, window_kb)
     window_kb : int
         for sex chromosome, the window in kilobases over which to calculate LD
         score
+
     Returns
     -------
     None
     '''
     if chrom != "X":
         subprocess.check_call("python " + LD_script \
-        + " --bfile " + intermediate_directory + chrom \
+        + " --bfile " + int_directory + chrom \
         + " --ld-wind-cm " + str(window_cm) \
         + " --out " + int_directory + "LD-" + chrom \
-        + " --l2 --yes-really", shell=False)
+        + " --l2 --yes-really", shell=True)
 
     # X chromosome doesn't have a recombination map from 1000 genomes
     # so just set LD score to be calculate within an approximate
     # centimorgan window
     else:
         subprocess.check_call("python " + LD_path + "ldsc.py " \
-        + "--bfile " + binary_file \
+        + "--bfile " + int_directory + chrom \
         + " --ld-wind-kb " + str(window_kb) \
         + " --out " + int_directory + "LD-" + chrom \
-        + " --l2 --yes-really", shell=False)
-
-def order_scores(chrom, LD_file, int_directory):
-    '''
-    Here we reassign LDscore_i_new = (1.0 - LD_score_i / max(LD_score)).
-    This gives the highest scoring SNP the lowest p value, and thus the
-    greatest priority when clumping.
-    Parameters
-    ----------
-    chrom : string
-        chromosome number
-    int_directory : string
-        directory path where intermediate and output files are stored
-    LD_file : string
-        path of LD score file
-    Returns
-    -------
-    None
-    '''
-    # unzip files calculated by LDScore regression
-    subprocess.check_call("gzip -d " + LD_file + ".gz",shell=False)
-    assoc = open(LD_file, 'r')
-    # create a new .p file to write results to"
-    p_file = open(int_directory + name + ".p", 'w')
-    # write header
-    p_file.write("SNP" + "\t" + 'P\n')
-    p_dictionary = {}
-    size_dict = {}
-
-    # loop over the association file and for each SNP assign its LDscore
-    # in a dictionary
-    for line in assoc.readlines()[1:]:
-        SNP = line.split('\t')[1]
-
-        LD = float(line.split('\t')[3].rstrip('\n'))
-
-        p_dictionary[SNP] = LD
-    assoc.close()
-    # calculate the max LDscore for the chromosome
-    max_LD = float(max(p_dictionary.values()))
-    # for each SNP in the sorted dictionary, map the LDscore
-    # to LD_score_new_i = (1.0 - LD_score_i / max(LD_score))
-    # Add 1 x 10^-14 so that no SNP has a p value of 0.0
-    for SNP in sorted(p_dictionary, key=p_dictionary.get, reverse=True):
-        p_val = (1.0 - (float(p_dictionary[SNP])/max_LD)) + 0.00000000000001
-        if p_val < 1.0:
-            p_file.write(SNP + '\t' + str(p_val) + '\n')
-    del p_dictionary
-    p_file.close()
-
+        + " --l2 --yes-really", shell=True)
 
 def prune(chrom, int_directory, window, slide, cutoff):
     '''
@@ -293,6 +253,7 @@ def prune(chrom, int_directory, window, slide, cutoff):
     variant window. If a pair has an R^2 correlation greater than some
     threshold, then one SNP within this pair is removed. After pruning within
     this window, PLINK slides along the chromosome by some number of SNPs.
+
     Parameters
     ----------
     chrom : string
@@ -311,31 +272,80 @@ def prune(chrom, int_directory, window, slide, cutoff):
     -------
     None
     '''
-
     if chrom != "X":
         subprocess.check_call("plink --bfile " + int_directory  + chrom \
-        + " --indep-pairwise " + window + " " + slide + " " + cutoff \
+        + " --indep-pairwise " + str(window) + " " + str(slide) + " " + str(cutoff) \
         + " --r" \
-        + " --out " + int_directory + chrom, shell=False)
+        + " --out " + int_directory + chrom, shell=True)
 
     else:
         subprocess.check_call("plink --bfile " + int_directory  + chrom \
-        + " --indep-pairwise " + window + " " + slide + " " + cutoff \
+        + " --indep-pairwise " + str(window) + " " + str(slide) + " " + str(cutoff) \
         + " --r" \
         + " --ld-xchr 1" \
-        + " --out " + int_directory + chrom, shell=False)
+        + " --out " + int_directory + chrom, shell=True)
+#    subprocess.call("gzip -d " + int_directory + "LD-" + chrom + ".l2.ldscore.gz", shell=True)
 
-def LD_separate(chrom, int_directory):
+def order(chrom, int_directory):
     '''
-    Read in the association files created by order function
-    and separate it out into independent(pruned.in) SNPs and
-    dependent(pruned.out) SNPs.
+    Here we reassign LDscore_i_new = (1.0 - LD_score_i / max(LD_score)).
+    This gives the highest scoring SNP the lowest p value, and thus the
+    greatest priority when clumping.
+
     Parameters
     ----------
     chrom : string
         chromosome number
     int_directory : string
         directory path where intermediate and output files are stored
+    LD_file : string
+        path of LD score file
+
+    Returns
+    -------
+    None
+    '''
+    subprocess.call("gzip -d " + int_directory + "LD-" + chrom + ".l2.ldscore.gz", shell=True)
+    # unzip files calculated by LDScore regression
+    assoc = open(int_directory + "LD-" + chrom + ".l2.ldscore", 'r')
+    # create a new .p file to write results to"
+    p_file = open(int_directory + chrom + ".p", 'w')
+    # write header
+    p_file.write("SNP" + "\t" + 'P\n')
+    p_dictionary = {}
+    size_dict = {}
+    # loop over the association file and for each SNP assign its LDscore
+    # in a dictionary
+    for line in assoc.readlines()[1:]:
+        SNP = line.split('\t')[1]
+        LD = float(line.split('\t')[3].rstrip('\n'))
+        p_dictionary[SNP] = LD
+        assoc.close()
+    # calculate the max LDscore for the chromosome
+    max_LD = float(max(p_dictionary.values()))
+    # for each SNP in the sorted dictionary, map the LDscore
+    # to LD_score_new_i = (1.0 - LD_score_i / max(LD_score))
+    # Add 1 x 10^-14 so that no SNP has a p value of 0.0
+    for SNP in sorted(p_dictionary, key=p_dictionary.get, reverse=True):
+        p_val = (1.0 - (float(p_dictionary[SNP])/max_LD)) + 0.00000000000001
+        if p_val < 1.0:
+            p_file.write(SNP + '\t' + str(p_val) + '\n')
+    del p_dictionary
+    p_file.close()
+
+def LD_separate(chrom, int_directory):
+    '''
+    Read in the association files created by order function
+    and separate it out into independent(pruned.in) SNPs and
+    dependent(pruned.out) SNPs.
+
+    Parameters
+    ----------
+    chrom : string
+        chromosome number
+    int_directory : string
+        directory path where intermediate and output files are stored
+
     Returns
     -------
     None
@@ -372,6 +382,7 @@ def clump(chrom, int_directory, cutoff, max_size):
     correlation of atleast "cutoff"(specified with --clump-r2) with the index
     variant. p1 and p2 represent the upper thresholds of signifigance, above
     which SNPs should be excluded. Here they are set to 1 to include all SNPs.
+
     Parameters
     ----------
     chrom : string
@@ -383,6 +394,7 @@ def clump(chrom, int_directory, cutoff, max_size):
     max_size : int
         max distance in kb a SNP can be from an index variant in order to be
         included in a clump
+
     Returns
     -------
     None
@@ -393,9 +405,9 @@ def clump(chrom, int_directory, cutoff, max_size):
                 + "--clump-index-first " \
                 + "--clump-p1 1.0 " \
                 + "--clump-p2 1.0 " \
-                + "--clump-r2 " + cutoff \
-                + "--clump-kb " + max_size \
-                + "--out " + int_directory + chrom, shell=False)
+                + "--clump-r2 " + str(cutoff) + " " \
+                + "--clump-kb " + str(max_size) + " " \
+                + "--out " + int_directory + chrom, shell=True)
 
 
 def reformat_clumps(chrom, int_directory):
@@ -403,6 +415,7 @@ def reformat_clumps(chrom, int_directory):
     Script to read in clumps and write them into a haplotype map file readable
     by picard. This file format has recently been deprecated in favor of a VCF
     format file so this should be updated at some point.
+
     Parameters
     ----------
     chrom : string
@@ -414,20 +427,21 @@ def reformat_clumps(chrom, int_directory):
     max_size : int
         max distance in kb a SNP can be from an index variant in order to be
         included in a clump
+
     Returns
     -------
     None
     '''
     # Sort the clumps by base pair position of index variant
     # and write to a new file
-    subprocess.check_call("tail -n+2 " + int_directory + chrom + ".recode_u.vcf"\
-                                + "| sort -k4,4 > " + chrom + "_sorted.clumped",\
-                                                                    shell=False)
+    subprocess.check_call("tail -n+2 " + int_directory + chrom + ".clumped"\
+                            + "| sort -k4,4 > " + int_directory + chrom 
+			    + "_sorted.clumped", shell=True)
 
     # create a dictionary of blocks where each key is a SNP
     # and is assigned a value equal to it's index variant
     block_dict = {}
-    anchor_file = open(chrom + "_sorted.clumped", 'r')
+    anchor_file = open(int_directory + chrom + "_sorted.clumped", 'r')
     anchors = []
     for line in anchor_file.readlines()[2:]:
         anchor = line.rstrip('\n').split()[2]
@@ -441,7 +455,7 @@ def reformat_clumps(chrom, int_directory):
     anchor_file.close()
 
     # read in old map
-    old_map = open(inter_directory + chrom + ".recode_u.vcf", 'r')
+    old_map = open(int_directory + chrom + ".recode_u.vcf", 'r')
     new_map = open(int_directory + chrom + ".map", 'w')
     # exclude header
     # parse each line in old vcf file to extract the SNP
@@ -468,7 +482,7 @@ def reformat_clumps(chrom, int_directory):
     new_map.close()
     old_map.close()
 
-def detect_negative_LD(chrom, clump_file, int_directory):
+def detect_negative_LD(chrom, int_directory):
     '''
     Reads in data from clumping procedure and writes out pairs of SNPs in the
     newly created map file that are in high negative LD that give a high r^2
@@ -485,6 +499,7 @@ def detect_negative_LD(chrom, clump_file, int_directory):
     max_size : int
         max distance in kb a SNP can be from an index variant in order to be
         included in a clump
+
     Returns
     -------
     None
@@ -506,7 +521,7 @@ def detect_negative_LD(chrom, clump_file, int_directory):
     # its value in the dictionary above. If it is, write
     # the pair to a new ".negLD" file
 
-    map_file = open(inter_directory + chrom + ".map", 'r')
+    map_file = open(int_directory + chrom + ".map", 'r')
     with map_file as maps:
         for num, line in enumerate(maps):
     #       if num > (end - 1) :
@@ -515,18 +530,18 @@ def detect_negative_LD(chrom, clump_file, int_directory):
                 snp2 = line.split('\t')[6]
                 if (snp1, snp2) in r_dict.keys():
                     if float(r_dict[(snp1, snp2)]) < -0.50:
-                        with open(direc+filename + ".negLD", 'a') as negLDfile:
+                        with open(int_directory + chrom + ".negLD", 'a') as negLDfile:
                             negLDfile.write(snp1 + '\t' + snp2 + '\t' \
                                             + r_dict[(snp1, snp2)] + '\n')
                     del r_dict[(snp1, snp2)]
                 if (snp2, snp1) in r_dict.keys():
                     if float(r_dict[(snp2, snp1)]) < -0.50:
-                        with open(direc+filename +".negLD", 'a') as negLDfile:
+                        with open(int_directory + chrom + ".negLD", 'a') as negLDfile:
                             negLDfile.write(snp1 + '\t' + snp2 + '\t' \
                                             + r_dict[(snp2, snp1)] + '\n')
                     del r_dict[(snp2, snp1)]
 
-def switch_alleles(chrom, cwd, neg_file):
+def switch_alleles(chrom, cwd, int_directory):
     '''
     For each chromosomal map file, read in the pairs of SNPs found to be in
     negative LD and switch the major and minor alleles in the map file. Keep
@@ -543,20 +558,21 @@ def switch_alleles(chrom, cwd, neg_file):
     max_size : int
         max distance in kb a SNP can be from an index variant in order to be
         included in a clump
+
     Returns
     -------
     None
     '''
 
     tab = '\t'
-    negfile = open(inter_directory + chrom + ".neg", 'r')
+    negfile = open(int_directory + chrom + ".negLD", 'r')
     neglist = []
     with negfile as neg:
         for line in neg:
             neglist.append(line.split()[0])
-    newmapfile =open(cwd + chrom + "filtered.map", 'w')
+    newmapfile =open(cwd + chrom + ".filtered.map", 'w')
     anchor_maf_problems = []
-    oldmapfile = open(inter_directory + chrom + ".map", 'r')
+    oldmapfile = open(int_directory + chrom + ".map", 'r')
     with oldmapfile as old:
         for k, line in enumerate(old):
             chrom =line.split('\t')[0]
