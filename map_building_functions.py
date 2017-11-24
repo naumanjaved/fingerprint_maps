@@ -563,7 +563,10 @@ def switch_alleles(chrom, cwd, int_directory):
     -------
     None
     '''
-
+    if not os.path.isfile(int_directory + chrom + ".negLD"):
+        subprocess.check_call("cp " + int_directory + chrom + ".map " \
+	+ cwd + chrom + ".filtered.map", shell=True)
+        return None
     tab = '\t'
     negfile = open(int_directory + chrom + ".negLD", 'r')
     neglist = []
