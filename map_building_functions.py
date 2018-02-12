@@ -1,7 +1,6 @@
 import subprocess
 import os
 import itertools as it
-import numpy as np
 import sys
 import argparse
 import traceback
@@ -78,12 +77,13 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
                     if diff > SIM:
                         diffbool = False
                         break
-                    if not diffbool:
-                        continue
+                if not diffbool:
+                    continue
                 if len(values) != 5:
                         continue
                 if SNP in SNPs or SNP == ".":
                     continue
+
                 # append to list of "similar" SNPs
                 with open(int_directory + "chr_" + chrom \
                     + "-common-SNPs.list", 'a') as similar_SNPs:
@@ -187,25 +187,25 @@ def create_PLINK_binary(chrom, int_directory, recomb_directory):
     '''
     recomb_file = recomb_directory \
                     + "genetic_map_chr" \
-            + chrom \
-            + "_combined_b37.txt* " \
-            + chrom
-    # if autosome, use 1000 G recombination map to write centimorgan
+                    + chrom \
+                    + "_combined_b37.txt* " \
+                    + chrom
+    # use 1000 G recombination map to write centimorgan
     # positions for the .bim file
-    if chrom != "X":
-        subprocess.check_call("plink --vcf " \
-        + int_directory + chrom + ".recode_u.vcf" \
-        + " --cm-map " + recomb_file \
-    + " --make-bed" \
-        + " --out " + int_directory + chrom, shell=True)
+#    if chrom != "X":
+    subprocess.check_call("plink --vcf " \
+            + int_directory + chrom + ".recode_u.vcf" \
+            + " --cm-map " + recomb_file \
+            + " --make-bed" \
+            + " --out " + int_directory + chrom, shell=True)
     # if x chromsome then just use basepair position instead of centimorgans
-    else:
-        subprocess.check_call("plink --vcf " \
-    + int_directory + chrom + ".recode_u.vcf" \
-    + " --make-bed " \
-        + " --out " + int_directory + chrom, shell=True)
+#    else:
+#        subprocess.check_call("plink --vcf " \
+#    + int_directory + chrom + ".recode_u.vcf" \
+#    + " --make-bed " \
+#        + " --out " + int_directory + chrom, shell=True)
 
-def LD_score(chrom, int_directory, LD_script, window_cm, window_kb):
+def LD_score(chrom, int_directory, LD_script, window_cm):
     '''
     Calculates LDscore of all variants for each chromosome
     using LDSC script(https://github.com/bulik/ldsc)
@@ -216,35 +216,22 @@ def LD_score(chrom, int_directory, LD_script, window_cm, window_kb):
         chromosome number
     int_directory : string
         directory path where intermediate and output files are stored
-    LD_path : string
+    LD_script : string
         directory containing python LD script
     window_cm : float
         for autosomes, the window in centimorgans over which to calculate LD
         scores
-    window_kb : int
-        for sex chromosome, the window in kilobases over which to calculate LD
-        score
 
     Returns
     -------
     None
     '''
-    if chrom != "X":
-        subprocess.check_call("python " + LD_script \
-        + " --bfile " + int_directory + chrom \
-        + " --ld-wind-cm " + str(window_cm) \
-        + " --out " + int_directory + "LD-" + chrom \
-        + " --l2 --yes-really", shell=True)
-
-    # X chromosome doesn't have a recombination map from 1000 genomes
-    # so just set LD score to be calculate within an approximate
-    # centimorgan window
-    else:
-        subprocess.check_call("python " + LD_path + "ldsc.py " \
-        + "--bfile " + int_directory + chrom \
-        + " --ld-wind-kb " + str(window_kb) \
-        + " --out " + int_directory + "LD-" + chrom \
-        + " --l2 --yes-really", shell=True)
+#    if chrom != "X":
+    subprocess.check_call("python " + LD_script \
+            + " --bfile " + int_directory + chrom \
+            + " --ld-wind-cm " + str(window_cm) \
+            + " --out " + int_directory + "LD-" + chrom \
+            + " --l2 --yes-really", shell=True)
 
 def prune(chrom, int_directory, window, slide, cutoff):
     '''
@@ -261,7 +248,7 @@ def prune(chrom, int_directory, window, slide, cutoff):
     int_directory : string
         directory path where intermediate and output files are stored
     window : int
-        size of window in SNPs over which to compute all pairwise correlations
+        size of window in kb over which to compute all pairwise correlations
     slide : int
         number of SNPs to slide over after each iteration
     cutoff : float
@@ -280,7 +267,7 @@ def prune(chrom, int_directory, window, slide, cutoff):
 
     else:
         subprocess.check_call("plink --bfile " + int_directory  + chrom \
-        + " --indep-pairwise " + str(window) + " " + str(slide) + " " + str(cutoff) \
+        + " --indep-pairwise " + str(window) + "kb " + str(slide) + " " + str(cutoff) \
         + " --r" \
         + " --ld-xchr 1" \
         + " --out " + int_directory + chrom, shell=True)

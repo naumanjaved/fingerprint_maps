@@ -8,7 +8,7 @@ import map_building_functions as build
 import subprocess
 import os
 import itertools as it
-import numpy as np
+#import numpy as np
 import sys
 import argparse
 import traceback
@@ -38,13 +38,13 @@ class Logger(object):
 
 def create_maps(args, log):
 
-    full_path = os.getcwd() + "/"
+    full_path = "/seq/epiprod/ENCODE/genotyping/picardtesting/fingerprint_maps" + "/"
     intermediate_directory = full_path + "intermediates/"
-    #print intermediate_directory
+   
     log.log('Creating list of SNPs with similar MAFs across populations...')
     build.extract_similar_SNPs(args.chromosome, args.VCF_file,
-                                intermediate_directory, args.similarity)
-    log.log('Finished creating lists of similar SNPs...')
+            intermediate_directory, args.similarity)
+    log.log('Finished creating lists of similar SNPs...') 
     log.log('Creating filtered VCFs.')
     build.create_VCFs(args.chromosome, args.VCF_file, intermediate_directory, args.min_MAF)
     log.log('Finished creating filtered VCFs.')
@@ -57,7 +57,7 @@ def create_maps(args, log):
     log.log('Finished creating binary files.')
     log.log('Calculating LDScores...')
     build.LD_score(args.chromosome, intermediate_directory, args.LD_script,
-                    args.LDScore_window_autosome, args.LDScore_window_X)
+                    args.LDScore_window_autosome) 
     log.log('Finished calculating LDScores.')
     log.log('Creating PLINK association files...')
     build.order(args.chromosome, intermediate_directory)
@@ -69,6 +69,7 @@ def create_maps(args, log):
     log.log('Separating out LDScores into dependent and independent SNP files...')
     build.LD_separate(args.chromosome, intermediate_directory)
     log.log('Finished separating LDScores.')
+    
     log.log('Clumping SNPs...')
     build.clump(args.chromosome, intermediate_directory,
                args.clump_cutoff, args.max_distance_clump)
@@ -100,9 +101,7 @@ parser.add_argument('--min_MAF', default=0.10, type=float,
     help='Minimum minor allele fraction of SNPs that will be included in map')
 parser.add_argument('--LDScore_window_autosome', default=1.0, type=float,
     help='Window size(in centimorgans) over which to calculate LDScore.')
-parser.add_argument('--LDScore_window_X', default=871, type=int,
-    help='Window size(kb for X chromosome) over which to calculate LDScore.')
-parser.add_argument('--prune_window', default=1000, type=int,
+parser.add_argument('--prune_window', default=1500, type=int,
     help='Window size in # SNPs for PLINK prune function')
 parser.add_argument('--prune_slide', default=5, type=int,
     help='Number of SNPs to slide over on each iteration of PLINK prune')
@@ -138,7 +137,7 @@ if __name__ == "__main__":
         raise TypeError('--LD_script must be full path pointing to ldsc.py')
     if args.LD_script is None:
         raise ValueError('--LD_script is required.')
-    '''
+    
     if not isinstance(args.similarity, float):
         raise TypeError('--similarity must be a float between 0.0 and 1.0')
     if args.similarity is None or args.similarity < 0.0 or args.similarity > 1.0:
@@ -153,12 +152,12 @@ if __name__ == "__main__":
         raise TypeError('--LDScore_window_autosome must be a float > 0.0')
     if args.LDScore_window_autosome is None or args.LDScore_window_autosome < 0.0:
         raise ValueError('--LDScore_window_autosome is required - must be float > 0.0')
-
+    '''
     if not isinstance(args.LDScore_window_X, int):
         raise TypeError('--LDScore_window_X must be an int > 0')
     if args.LDScore_window_X is None or args.LDScore_window_X <=0:
         raise ValueError('--LDScore_window_X is required - must be int > 0')
-
+    '''
     if not isinstance(args.prune_window, int):
         raise TypeError('--prune_window must be an int > 0')
     if args.prune_window is None or args.prune_window <=0:
@@ -183,7 +182,7 @@ if __name__ == "__main__":
         raise TypeError('--max_distance_clump must be an int > 0')
     if args.max_distance_clump is None or args.max_distance_clump <=0:
         raise ValueError('--max_distance_clump is required - must be int > 0')
-    '''
+    
 
     log = Logger(args.chromosome+'.log')
 
