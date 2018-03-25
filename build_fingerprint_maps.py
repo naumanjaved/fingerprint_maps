@@ -16,10 +16,10 @@ import time
 import datetime
 
 __version__ = '1.0.0'
-MASTHEAD = "----------------------------------------------------------------------\n"
+MASTHEAD = "---------------------------------------------------------------\n"
 MASTHEAD += "* Fingerprint_Maps\n"
 MASTHEAD += "* Version {V}\n".format(V=__version__)
-MASTHEAD += "---------------------------------------------------------------------\n"
+MASTHEAD += "--------------------------------------------------------------\n"
 
 class Logger(object):
     '''
@@ -37,20 +37,24 @@ class Logger(object):
         print msg
 
 def create_maps(args, log):
-
-    full_path = "/seq/epiprod/ENCODE/genotyping/picardtesting/fingerprint_maps" + "/"
+    
+    full_path = os.getcwd() + "/"
     intermediate_directory = full_path + "intermediates/"
-   
+
+    '''
     log.log('Creating list of SNPs with similar MAFs across populations...')
     build.extract_similar_SNPs(args.chromosome, args.VCF_file,
             intermediate_directory, args.similarity)
     log.log('Finished creating lists of similar SNPs...') 
+    
     log.log('Creating filtered VCFs.')
     build.create_VCFs(args.chromosome, args.VCF_file, intermediate_directory, args.min_MAF)
     log.log('Finished creating filtered VCFs.')
+    
     log.log('Sorting VCFs...')
     build.sort_VCF(args.chromosome, intermediate_directory)
     log.log('Finished sorting VCFs.')
+    
     log.log('Creating PLINK binary files...')
     build.create_PLINK_binary(args.chromosome, intermediate_directory,
                               args.recomb_directory)
@@ -59,6 +63,7 @@ def create_maps(args, log):
     build.LD_score(args.chromosome, intermediate_directory, args.LD_script,
                     args.LDScore_window_autosome) 
     log.log('Finished calculating LDScores.')
+    
     log.log('Creating PLINK association files...')
     build.order(args.chromosome, intermediate_directory)
     log.log('Finished creating PLINK association files.')
@@ -74,15 +79,18 @@ def create_maps(args, log):
     build.clump(args.chromosome, intermediate_directory,
                args.clump_cutoff, args.max_distance_clump)
     log.log('Finished clumping SNPs.')
+    '''
     log.log('Building map file...')
     build.reformat_clumps(args.chromosome, intermediate_directory)
     log.log('Finished building map files.')
+    
     log.log('Detecting negative LD...')
     build.detect_negative_LD(args.chromosome, intermediate_directory)
     log.log('Finished recording negative LD.')
     log.log('Switching alleles...')
     build.switch_alleles(args.chromosome, full_path, intermediate_directory)
     log.log('Finished switching negative LD alleles.')
+    
 parser = argparse.ArgumentParser()
 # Directory specifications'
 parser.add_argument('--recomb_directory', default=None, type=str,
@@ -152,12 +160,6 @@ if __name__ == "__main__":
         raise TypeError('--LDScore_window_autosome must be a float > 0.0')
     if args.LDScore_window_autosome is None or args.LDScore_window_autosome < 0.0:
         raise ValueError('--LDScore_window_autosome is required - must be float > 0.0')
-    '''
-    if not isinstance(args.LDScore_window_X, int):
-        raise TypeError('--LDScore_window_X must be an int > 0')
-    if args.LDScore_window_X is None or args.LDScore_window_X <=0:
-        raise ValueError('--LDScore_window_X is required - must be int > 0')
-    '''
     if not isinstance(args.prune_window, int):
         raise TypeError('--prune_window must be an int > 0')
     if args.prune_window is None or args.prune_window <=0:
@@ -184,7 +186,7 @@ if __name__ == "__main__":
         raise ValueError('--max_distance_clump is required - must be int > 0')
     
 
-    log = Logger(args.chromosome+'.log')
+    log = Logger(os.getcwd() + "/output/" + args.chromosome+'.log')
 
     try:
         defaults = vars(parser.parse_args(''))
@@ -208,4 +210,4 @@ if __name__ == "__main__":
         log.log('Analysis finished at {T}'.format(T=time.ctime()) )
         time_elapsed = round(time.time()-start_time,2)
         log.log('Total time elapsed: {T}'.format(T=\
-	str(datetime.timedelta(seconds=time_elapsed))))
+    str(datetime.timedelta(seconds=time_elapsed))))
