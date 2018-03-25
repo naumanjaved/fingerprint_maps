@@ -39,8 +39,9 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
         if record.INFO['VT'][0] != 'SNP':  # Extract only SNPs
             continue
 
-        SNP = record.ID
-        if SNP == '.' or type(SNP) != 'str':
+        SNP =str(record.ID)
+
+        if SNP == '.' or not isinstance(SNP, basestring):
             continue  # Skip over SNPs with no ID
 
         if SNP in SNPs:  # Skip duplicates
@@ -56,6 +57,7 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
         differences = [abs(y-x) for x, y in it.combinations(values, 2)]
         if max(differences) > SIM or len(values) != 5 or SNP == ".":
             continue  # If similarity threshold is exceeded, skip SNP
+
         sim_SNPs_file = int_directory + "chr_" + chrom + "-common-SNPs.list"
 
         with open(sim_SNPs_file, 'a') as similar_SNPs: 
