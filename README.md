@@ -27,8 +27,8 @@ In order to run `build_fingerprint_maps`, you must have working installations of
 4. LDSC - https://github.com/bulik/ldsc
 
 ## Required Files
-1. 1000 Genomes Phase 3 VCFs - ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/
-2. ShapeIT recombination maps phase II b37 - http://www.shapeit.fr/files/genetic_map_b37.tar.gz
+1. 1000 Genomes Phase 3 VCFs(hg19) - ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/
+2. 1000 Genomes Phase 3 Recombination maps(hg19) - http://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3/
 
 ## How to run
 See run.sh to see a sample run script.
