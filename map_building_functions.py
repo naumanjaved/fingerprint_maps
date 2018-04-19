@@ -33,7 +33,7 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
     '''
 
     vcf_reader = vcf.Reader(open(VCF_file, 'r'))  # Loop over VCF records
-    SNPs = []
+#    SNPs = []
     for record in vcf_reader:
         info = record.INFO
         if record.INFO['VT'][0] != 'SNP':  # Extract only SNPs
@@ -44,8 +44,8 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
         if SNP == '.' or not isinstance(SNP, basestring):
             continue  # Skip over SNPs with no ID
 
-        if SNP in SNPs:  # Skip duplicates
-            continue
+#        if SNP in SNPs:  # Skip duplicates
+#            continue
 
         values = []  # List to hold population allele frequencies(AFs)
         differences = []  # List to hold pairwise AF differences
@@ -533,7 +533,7 @@ def switch_alleles(chrom, cwd, int_directory):
         for k, line in enumerate(old):
             chrom =line.split('\t')[0]
             bp = line.split('\t')[1]
-            maf = float(line.split('\t')[5])
+            maf = line.split('\t')[5]
             snp = line.split('\t')[2]
             minor = line.split('\t')[4]
             maj = line.split('\t')[3]
