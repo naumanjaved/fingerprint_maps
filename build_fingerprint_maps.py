@@ -40,13 +40,12 @@ def create_maps(args, log):
     
     full_path = os.getcwd() + "/"
     intermediate_directory = full_path + "intermediates/"
-
-    '''
+    
     log.log('Creating list of SNPs with similar MAFs across populations...')
     build.extract_similar_SNPs(args.chromosome, args.VCF_file,
             intermediate_directory, args.similarity)
     log.log('Finished creating lists of similar SNPs...') 
-    
+
     log.log('Creating filtered VCFs.')
     build.create_VCFs(args.chromosome, args.VCF_file, intermediate_directory, args.min_MAF)
     log.log('Finished creating filtered VCFs.')
@@ -79,7 +78,7 @@ def create_maps(args, log):
     build.clump(args.chromosome, intermediate_directory,
                args.clump_cutoff, args.max_distance_clump)
     log.log('Finished clumping SNPs.')
-    '''
+    
     log.log('Building map file...')
     build.reformat_clumps(args.chromosome, intermediate_directory)
     log.log('Finished building map files.')
@@ -90,7 +89,7 @@ def create_maps(args, log):
     log.log('Switching alleles...')
     build.switch_alleles(args.chromosome, full_path, intermediate_directory)
     log.log('Finished switching negative LD alleles.')
-    
+
 parser = argparse.ArgumentParser()
 # Directory specifications'
 parser.add_argument('--recomb_directory', default=None, type=str,
