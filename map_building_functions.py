@@ -33,7 +33,7 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
     '''
 
     vcf_reader = vcf.Reader(open(VCF_file, 'r'))  # Loop over VCF records
-#    SNPs = []
+    SNPs = []
     for record in vcf_reader:
         info = record.INFO
         if record.INFO['VT'][0] != 'SNP':  # Extract only SNPs
@@ -44,8 +44,8 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
         if SNP == '.' or not isinstance(SNP, basestring):
             continue  # Skip over SNPs with no ID
 
-#        if SNP in SNPs:  # Skip duplicates
-#            continue
+        if SNP in SNPs:  # Skip duplicates
+            continue
 
         values = []  # List to hold population allele frequencies(AFs)
         differences = []  # List to hold pairwise AF differences
@@ -63,7 +63,7 @@ def extract_similar_SNPs(chrom, VCF_file, int_directory, SIM):
         with open(sim_SNPs_file, 'a') as similar_SNPs: 
             similar_SNPs.write(SNP + '\n')
             SNPs.append(SNP)
-
+            
 def create_VCFs(chrom, VCF_file, int_directory, min_MAF):
     '''
     Extract SNPs from each chromosome that are:
