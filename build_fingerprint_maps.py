@@ -43,7 +43,8 @@ def create_maps(args, log):
     log.log('Pre-processing VCFs.')     
     build.filter_VCFs(args.chromosome, args.VCF_file, intermediate_directory, args.min_MAF)     
     log.log('Finished processing VCFs.')
-         
+    
+     
     log.log('Creating list of SNPs with similar MAFs across populations...')
     build.extract_similar_SNPs(args.chromosome,
             intermediate_directory, args.similarity)
