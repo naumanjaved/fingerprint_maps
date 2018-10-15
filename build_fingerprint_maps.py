@@ -15,7 +15,7 @@ import traceback
 import time
 import datetime
 
-__version__ = '1.0.0'
+__version__ = '1.0.17'
 MASTHEAD = "---------------------------------------------------------------\n"
 MASTHEAD += "* Fingerprint_Maps\n"
 MASTHEAD += "* Version {V}\n".format(V=__version__)
@@ -38,26 +38,26 @@ class Logger(object):
 
 def create_maps(args, log):
     
-    full_path = os.getcwd() + "/"
-    intermediate_directory = full_path + "intermediates/"
-    
+    intermediate_directory = args.cwd + "intermediates/"
+     
+    log.log('Pre-processing VCFs.')     
+    build.filter_VCFs(args.chromosome, args.VCF_file, intermediate_directory, args.min_MAF)     
+    log.log('Finished processing VCFs.')
+         
     log.log('Creating list of SNPs with similar MAFs across populations...')
-    build.extract_similar_SNPs(args.chromosome, args.VCF_file,
+    build.extract_similar_SNPs(args.chromosome,
             intermediate_directory, args.similarity)
     log.log('Finished creating lists of similar SNPs...') 
-
-    log.log('Creating filtered VCFs.')
-    build.create_VCFs(args.chromosome, args.VCF_file, intermediate_directory, args.min_MAF)
-    log.log('Finished creating filtered VCFs.')
     
-    log.log('Sorting VCFs...')
-    build.sort_VCF(args.chromosome, intermediate_directory)
-    log.log('Finished sorting VCFs.')
-    
+    log.log('Creating VCFs with common variants')
+    build.keep_common_SNPs(args.chromosome, intermediate_directory)
+    log.log('Finished creating VCFs with common variants')
+        
     log.log('Creating PLINK binary files...')
     build.create_PLINK_binary(args.chromosome, intermediate_directory,
                               args.recomb_directory)
     log.log('Finished creating binary files.')
+    
     log.log('Calculating LDScores...')
     build.LD_score(args.chromosome, intermediate_directory, args.LD_script,
                     args.LDScore_window_autosome) 
@@ -66,6 +66,7 @@ def create_maps(args, log):
     log.log('Creating PLINK association files...')
     build.order(args.chromosome, intermediate_directory)
     log.log('Finished creating PLINK association files.')
+    
     log.log('Pruning SNPs...')
     build.prune(args.chromosome, intermediate_directory,
                 args.prune_window, args.prune_slide, args.prune_cutoff)
@@ -87,9 +88,9 @@ def create_maps(args, log):
     build.detect_negative_LD(args.chromosome, intermediate_directory)
     log.log('Finished recording negative LD.')
     log.log('Switching alleles...')
-    build.switch_alleles(args.chromosome, full_path, intermediate_directory)
+    build.switch_alleles(args.chromosome, args.cwd, intermediate_directory)
     log.log('Finished switching negative LD alleles.')
-
+    
 parser = argparse.ArgumentParser()
 # Directory specifications'
 parser.add_argument('--recomb_directory', default=None, type=str,
@@ -100,6 +101,7 @@ parser.add_argument('--VCF_file', default=None, type=str,
     help='VCF file name for the selected chromosome')
 parser.add_argument('--LD_script', default=None, type=str,
     help='Directory containing ldsc.py ')
+parser.add_argument('--cwd', type=str, help='current working directory')
 
 # SNP filtering and map calculation parameters
 parser.add_argument('--similarity', default=0.10, type=float,
@@ -108,15 +110,15 @@ parser.add_argument('--min_MAF', default=0.10, type=float,
     help='Minimum minor allele fraction of SNPs that will be included in map')
 parser.add_argument('--LDScore_window_autosome', default=1.0, type=float,
     help='Window size(in centimorgans) over which to calculate LDScore.')
-parser.add_argument('--prune_window', default=1500, type=int,
-    help='Window size in # SNPs for PLINK prune function')
+parser.add_argument('--prune_window', default=10000, type=int,
+    help='Window size in kb for PLINK prune function')
 parser.add_argument('--prune_slide', default=5, type=int,
     help='Number of SNPs to slide over on each iteration of PLINK prune')
 parser.add_argument('--prune_cutoff', default=0.1, type=float,
     help='Maximum r^2 correlation allowed between pruned SNPs')
 parser.add_argument('--clump_cutoff', default=0.9, type=float,
     help='Minimum r^2 correlation required for SNPs to be clumped together')
-parser.add_argument('--max_distance_clump', default=1500, type=float,
+parser.add_argument('--max_distance_clump', default=10000, type=float,
     help='Maximum distance in kb a SNP can be from index SNP when forming clump')
 
 if __name__ == "__main__":
@@ -185,7 +187,7 @@ if __name__ == "__main__":
         raise ValueError('--max_distance_clump is required - must be int > 0')
     
 
-    log = Logger(os.getcwd() + "/output/" + args.chromosome+'.log')
+    log = Logger(args.cwd + "output/" + args.chromosome+'.log')
 
     try:
         defaults = vars(parser.parse_args(''))
