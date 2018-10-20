@@ -90,7 +90,7 @@ def extract_similar_SNPs(chrom, int_directory, SIM):
         if max(differences) > SIM or len(values) != 5:
             continue  # If similarity threshold is exceeded, skip SNP
 
-        similar_SNPs.write(SNP + '\n')
+        similar_SNPs.write(str(index) + '-' + SNP + '\n')
     similar_SNPs.close()
 
 def keep_common_SNPs(chrom, int_directory):
