@@ -428,7 +428,7 @@ def reformat_clumps(chrom, int_directory):
                 block_dict[variant] = anchor
     anchor_file.close()
 
-    old_map = vcf.Reader(open(int_directory + chrom + ".recode_u.vcf", 'r'))
+    old_map = vcf.Reader(open(int_directory + chrom + ".common.recode.vcf", 'r'))
 
     new_map = open(int_directory + chrom + ".map", 'w')
     '''
