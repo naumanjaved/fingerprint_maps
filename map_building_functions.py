@@ -12,9 +12,7 @@ def filter_VCFs(chrom, VCF_file, int_directory, min_MAF):
     '''
     Extract SNPs from each chromosome that are:
     1) biallelic
-    2) have population specific MAF differences no greater than 10% as
-       determined by being listed in chr_i-common-SNPs.list
-    3) are phased
+    2) are phased
 
     Parameters
     ----------
@@ -40,7 +38,7 @@ def filter_VCFs(chrom, VCF_file, int_directory, min_MAF):
             + "--out " + name_prefix
     subprocess.call(command, shell=True)
 
-def extract_similar_SNPs(chrom, int_directory, SIM):
+def extract_similar_SNPs(chrom, int_directory, SIM, min_MAF):
     '''
     Writes to a new file the SNPs in an input VCF with population specific
     minor allele fractions(MAFs) that do not differ by more than SIM. For
@@ -85,9 +83,9 @@ def extract_similar_SNPs(chrom, int_directory, SIM):
 
         for field in info.keys():  # Load population AFs
             if '_AF' in field:
-                values.append(info[field][0])
+                values.append(float(info[field][0]))
                 differences = [abs(y-x) for x, y in it.combinations(values, 2)]
-        if max(differences) > SIM or len(values) != 5:
+        if max(differences) > SIM or len(values) != 5 or min(values) < 0.10:
             continue  # If similarity threshold is exceeded, skip SNP
 
         similar_SNPs.write(str(index) + '-' + SNP + '\n')
@@ -356,12 +354,12 @@ def LD_separate(chrom, int_directory):
 
 def clump(chrom, int_directory, cutoff, max_size):
     '''
-    Clumps dependent variants(_out.p) around independent variants(_in.p) in a
-    greedy manner.Each SNP "clumped" around an index variant should be within
-    a certain window size(specified with clump-kb parameter) and have an r^2
-    correlation of atleast "cutoff"(specified with --clump-r2) with the index
-    variant. p1 and p2 represent the upper thresholds of signifigance, above
-    which SNPs should be excluded. Here they are set to 1 to include all SNPs.
+    Clumps dependent variants(_out.p) around independent variants(_in.p)..Each 
+    SNP "clumped" around an index variant should be within a certain window 
+    size(specified with clump-kb parameter) and have an r^2 correlation of 
+    atleast "cutoff"(specified with --clump-r2) with the index variant. p1 and p2 
+    represent the upper thresholds of signifigance, above which SNPs should be 
+    excluded. Here they are set to 1 to include all SNPs.
 
     Parameters
     ----------
@@ -428,6 +426,18 @@ def reformat_clumps(chrom, int_directory):
                 block_dict[variant] = anchor
     anchor_file.close()
 
+
+    bim_dict = {}
+    # Read in plink .bim file to recover major and minor alleles
+    with open(int_directory + chrom + '.bim') as bim_file:
+        for line in bim_file:
+            line = line.rstrip('\n')
+            entries = line.split('\t')
+            variant =  entries[1]
+            minor = entries[4]
+            major = entries[5]
+            bim_dict[variant] = (minor, major)
+
     old_map = vcf.Reader(open(int_directory + "chr_" + chrom + ".common.recode.vcf", 'r'))
 
     new_map = open(int_directory + chrom + ".map", 'w')
@@ -439,13 +449,23 @@ def reformat_clumps(chrom, int_directory):
     '''
     for record in old_map:
         if record.ID in block_dict.keys():
+            ref = record.REF[0]
+            alt = record.ALT[0]
+            maf = record.INFO['AF'][0]
+            minor, major = bim_dict[record.ID]
+            switched_maf = str(maf)
+            if str(alt) == str(major):
+                switched_maf = str(1.0 - float(maf))
+            ref = major
+            alt = minor
+
             newline = str(record.CHROM) + '\t' \
                       + str(record.POS) + '\t' \
-                      + record.ID + '\t' \
-                      + str(record.REF[0]) + '\t' \
-                      + str(record.ALT[0]) + '\t' \
-                      + str(record.INFO['AF'][0]) + '\t' \
-                      + block_dict[record.ID] \
+                      + str(record.ID) + '\t' \
+                      + str(ref) + '\t' \
+                      + str(alt) + '\t' \
+                      + str(switched_maf) + '\t' \
+                      + str(block_dict[record.ID]) \
                       + '\t' + "" + '\t' + '\n'
             new_map.write(newline)
     new_map.close()
@@ -506,9 +526,9 @@ def detect_negative_LD(chrom, int_directory):
 def switch_alleles(chrom, cwd, int_directory):
     '''
     For each chromosomal map file, read in the pairs of SNPs found to be in
-    negative LD and switch the major and minor alleles in the map file.
-    Keep original map file and write the new map file to *.filtered.map
-
+    negative LD, switch the major and minor alleles in the map file, and
+    switch the MAF to 1-MAF.Keep original map file and write the new map file 
+    to *.filtered.map
     Parameters
     ----------
     chrom : string
@@ -545,9 +565,9 @@ def switch_alleles(chrom, cwd, int_directory):
             minor = line.split('\t')[4]
             maj = line.split('\t')[3]
             anch = line.split('\t')[6]
-            # Switch alleles if found in the list of SNPs in negative LD
+            # Switch alleles and replace maf with 1-maf if found in the list of SNPs in negative LD
             if snp in neglist:
-                newline = [chrom, bp, snp, minor, maj, maf, anch, "", "\n"]
+                newline = [chrom, bp, snp, minor, maj, str(1.0 - float(maf)), anch, "", "\n"]
                 newmapfile.write(tab.join(newline))
             else:
                 newmapfile.write(line)
