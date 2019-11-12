@@ -12,7 +12,7 @@ In order to run `build_fingerprint_maps`, you must have working installations of
 
 1. Python (>=2.7)
 1. PLINK2 - https://www.cog-genomics.org/plink2
-2. VCFTools - http://vcftools.sourceforge.net/man_latest.html
+2. VCFTools - https://vcftools.github.io/man_latest.html
 3. Anaconda(https://anaconda.org/anaconda/python) or the following modules:
      a. `subprocess` 
      b. `os` 
@@ -27,7 +27,7 @@ In order to run `build_fingerprint_maps`, you must have working installations of
 
 ## Required Files
 1. 1000 Genomes Phase 3 VCFs(hg19) - ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/
-2. 1000 Genomes Phase 3 Recombination maps(hg19) - http://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3/
+2. 1000 Genomes Phase 3 Recombination maps(hg19) - https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.html
 
 ## How to run
 See run.sh to see a sample run script.
