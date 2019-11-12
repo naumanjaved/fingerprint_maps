@@ -27,7 +27,7 @@ In order to run `build_fingerprint_maps`, you must have working installations of
 
 ## Required Files
 1. 1000 Genomes Phase 3 VCFs(hg19) - ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/
-2. 1000 Genomes Phase 3 Recombination maps(hg19) - http://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3/
+2. 1000 Genomes Phase 3 Recombination maps(hg19) - https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.html
 
 ## How to run
 See run.sh to see a sample run script.
