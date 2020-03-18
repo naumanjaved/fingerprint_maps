@@ -8,10 +8,10 @@ git clone https://github.com/naumanjaved/fingerprint_maps.git
 ```
 
 ## Precomputed map files
-* [hg19 with "chr" prefix before chromosome names](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg19_chr.map)
-* [hg19 without "chr" prefix before chromosome names](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg19_nochr.map)
-* [hg38 with "chr" prefix before chromosome names](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg38_chr.map)
-* [hg38 without "chr" prefix before chromosome names](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg38_nochr.map)
+* [hg19 with "chr" prefix](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg19_chr.map)
+* [hg19 without "chr" prefix](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg19_nochr.map)
+* [hg38 with "chr" prefix](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg38_chr.map)
+* [hg38 without "chr" prefix](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg38_nochr.map)
 
 
 ## Dependencies
