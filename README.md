@@ -8,11 +8,13 @@ git clone https://github.com/naumanjaved/fingerprint_maps.git
 ```
 
 ## Precomputed map files
+
 * [hg19 with "chr" prefix](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg19_chr.map)
 * [hg19 without "chr" prefix](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg19_nochr.map)
 * [hg38 with "chr" prefix](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg38_chr.map)
 * [hg38 without "chr" prefix](https://github.com/naumanjaved/fingerprint_maps/blob/master/map_files/hg38_nochr.map)
 
+The map_files directory also contains pre-computed maps with relaxed intra- and inter- block correlation thresholds. Map names contain the parameters used. 
 
 ## Dependencies
 
@@ -31,12 +33,12 @@ In order to run `build_fingerprint_maps`, you must have working installations of
      g. `traceback`
      h. `time`
      i. `datetime` 
+
 4. [LDSC(LDScore regression)](https://github.com/bulik/ldsc)
 
 ## Required Files
 Fingerprint maps uses VCFs from 1000 Genomes Phase 3 and recombination maps(SHAPEIT format). These can be found here: 
-* [hg19 VCFs](ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/) 
-* [hg38 VCFs(liftover)](ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20181203_biallelic_SNV/)
+* [hg19 and hg38 liftover VCFs](https://www.internationalgenome.org/data/) 
 * [hg19 recombination maps from SHAPEIT](references/genetic_map_b37.tar.gz) 
 * [hg38 recombination maps from SHAPEIT liftover](references/genetic_map_hg38.tar.gz)
 
