@@ -65,8 +65,8 @@ Email javed@broadinstitute.org for issues.
 
 ## Authors
 
-Nauman Javed(Broad Institute) wrote the above scripts to generate fingerprint maps 
-Yossi Farjoun(Broad Institute) wrote CrosscheckFingerprints and ExtractFingerprints for which the above maps can be used for
+Nauman Javed(Broad Institute) wrote the above scripts to generate fingerprint maps.
+Yossi Farjoun(Broad Institute) wrote CrosscheckFingerprints and ExtractFingerprints for which the above maps are inputs. 
 
 ## Citation
 If you use the above tool/maps with CrosscheckFingerprints in your publication please cite the Picard-tools repo as well as the paper 
