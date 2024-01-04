@@ -21,9 +21,9 @@ The map_files directory also contains pre-computed maps with relaxed intra- and 
 In order to run `build_fingerprint_maps`, you must have working installations of:
 
 1. Python (>=2.7)
-1. [PLINK2](https://www.cog-genomics.org/plink2)
-2. [VCFTools](http://vcftools.sourceforge.net/man_latest.html)
-3. [Anaconda](https://anaconda.org/anaconda/python) or the following modules:
+2. PLINK2 - https://www.cog-genomics.org/plink2
+3. VCFTools - https://vcftools.github.io/man_latest.html
+4. Anaconda(https://anaconda.org/anaconda/python) or the following modules:
      a. `subprocess` 
      b. `os` 
      c. `itertools`
@@ -34,7 +34,7 @@ In order to run `build_fingerprint_maps`, you must have working installations of
      h. `time`
      i. `datetime` 
 
-4. [LDSC(LDScore regression)](https://github.com/bulik/ldsc)
+5. [LDSC(LDScore regression)](https://github.com/bulik/ldsc)
 
 ## Required Files
 Fingerprint maps uses VCFs from 1000 Genomes Phase 3 and recombination maps(SHAPEIT format). These can be found here: 
