@@ -11,7 +11,7 @@ import time
 import datetime
 from multiprocessing import Pool
 
-__version__ = '1.0.1'
+__version__ = '2.0.0'
 MASTHEAD = "---------------------------------------------------------------\n"
 MASTHEAD += "* Fingerprint_Maps\n"
 MASTHEAD += "* Version {V}\n".format(V=__version__)
