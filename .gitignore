@@ -1,1 +1,22 @@
+# generated run outputs
+test_intermediates*/
+test_output*/
+intermediates*/
+output*/
+
+# downloaded 1000 genomes vcfs
+vcfs/
+
+# cloned ldsc python3 port
+ldsc/
+
+# extracted recombination maps (derived from bundled tarballs)
+references/genetic_map_b37/
+references/genetic_map_hg38/
+
+# python caches
+__pycache__/
+*.pyc
+
+# misc
 run.sh
